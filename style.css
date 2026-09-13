@@ -1,15 +1,15 @@
 :root{
-  --paper:#eef1ea;
-  --paper-raised:#e4e9dd;
-  --ink:#16261f;
-  --muted:#57685c;
-  --ledger:#1f4d3a;
-  --ledger-strong:#163a2b;
-  --brass:#97742f;
-  --wine:#7a2e33;
-  --line:#c9d2c1;
-  --line-soft:#dbe1d4;
-  --focus:#2f6f4e;
+  --paper:#f0f2f5;
+  --paper-raised:#e5e9ee;
+  --ink:#16233b;
+  --muted:#5c6b82;
+  --ledger:#1c3f73;
+  --ledger-strong:#142c54;
+  --brass:#c9962f;
+  --wine:#8c2f3a;
+  --line:#ccd2db;
+  --line-soft:#dde1e7;
+  --focus:#3568b3;
   --cat-logement:#1b9e77;
   --cat-alimentation:#d95f02;
   --cat-transport:#7570b3;
@@ -21,31 +21,31 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --paper:#11201a;
-    --paper-raised:#182a22;
-    --ink:#e8ece4;
-    --muted:#9bab9e;
-    --ledger:#5fa17d;
-    --ledger-strong:#7bbb98;
-    --brass:#d1ab5f;
-    --wine:#d17d80;
-    --line:#2c3e33;
-    --line-soft:#22322a;
-    --focus:#7bbb98;
+    --paper:#0f1826;
+    --paper-raised:#17233a;
+    --ink:#e8ecf3;
+    --muted:#9aa7bd;
+    --ledger:#6fa0e6;
+    --ledger-strong:#8fb6ee;
+    --brass:#e3bb6a;
+    --wine:#d98089;
+    --line:#263a5c;
+    --line-soft:#1c2c48;
+    --focus:#6fa0e6;
   }
 }
 :root[data-theme="dark"]{
-  --paper:#11201a;
-  --paper-raised:#182a22;
-  --ink:#e8ece4;
-  --muted:#9bab9e;
-  --ledger:#5fa17d;
-  --ledger-strong:#7bbb98;
-  --brass:#d1ab5f;
-  --wine:#d17d80;
-  --line:#2c3e33;
-  --line-soft:#22322a;
-  --focus:#7bbb98;
+  --paper:#0f1826;
+  --paper-raised:#17233a;
+  --ink:#e8ecf3;
+  --muted:#9aa7bd;
+  --ledger:#6fa0e6;
+  --ledger-strong:#8fb6ee;
+  --brass:#e3bb6a;
+  --wine:#d98089;
+  --line:#263a5c;
+  --line-soft:#1c2c48;
+  --focus:#6fa0e6;
 }
 
 *{ box-sizing:border-box; }
@@ -83,7 +83,7 @@ input, select{ font-family:inherit; }
   flex-wrap:wrap;
 }
 .brand{ display:flex; align-items:center; gap:12px; }
-.brand svg{ width:38px; height:38px; flex:none; }
+.brand-logo{ width:38px; height:38px; flex:none; border-radius:50%; display:block; }
 .brand-text h1{ font-size:1.7rem; font-weight:600; letter-spacing:.2px; }
 .brand-text p{ margin:2px 0 0; font-size:.8rem; color:var(--muted); letter-spacing:.03em; }
 
