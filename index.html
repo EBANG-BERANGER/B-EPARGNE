@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Béranger Épargne</title>
+<meta name="description" content="Registre financier personnel : suivi des entrées et sorties, rapport mensuel automatique et suggestions d'épargne.">
+<meta name="theme-color" content="#1f4d3a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="shell">
+  <header class="masthead">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="18.5" stroke="var(--ledger)" stroke-width="2"/>
+        <path d="M12 24 L18 17 L23 21 L29 12" stroke="var(--brass)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M23 12 H29 V18" stroke="var(--brass)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <div class="brand-text">
+        <h1>Béranger Épargne</h1>
+        <p>Registre financier personnel</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="data-actions">
+        <button class="ghost-btn" id="exportBtn">Exporter</button>
+        <button class="ghost-btn" id="importBtn">Importer</button>
+        <input type="file" id="importFile" accept="application/json" hidden>
+      </div>
+      <div class="month-nav">
+        <button id="prevMonth" aria-label="Mois précédent">‹</button>
+        <span class="month-label" id="monthLabel">—</span>
+        <button id="nextMonth" aria-label="Mois suivant">›</button>
+        <button class="month-today" id="gotoToday">aujourd'hui</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="install-banner" id="installBanner">
+    <span>Installez Béranger Épargne sur votre appareil pour y accéder hors ligne, comme une vraie application.</span>
+    <div style="display:flex; gap:8px; flex:none;">
+      <button id="installBtn">Installer</button>
+      <button class="dismiss" id="dismissInstall" aria-label="Fermer">✕</button>
+    </div>
+  </div>
+
+  <section class="tiles">
+    <div class="tile in">
+      <span class="k">Entrées</span>
+      <span class="v num" id="tileIn">—</span>
+      <span class="d" id="tileInSub">&nbsp;</span>
+    </div>
+    <div class="tile out">
+      <span class="k">Sorties courantes</span>
+      <span class="v num" id="tileOut">—</span>
+      <span class="d" id="tileOutSub">&nbsp;</span>
+    </div>
+    <div class="tile save">
+      <span class="k">Épargne du mois</span>
+      <span class="v num" id="tileSave">—</span>
+      <span class="d" id="tileSaveSub">&nbsp;</span>
+    </div>
+    <div class="tile left">
+      <span class="k">Reste non alloué</span>
+      <span class="v num" id="tileLeft">—</span>
+      <span class="d" id="tileLeftSub">&nbsp;</span>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Registre</h2>
+        <span class="hint" id="txCount"></span>
+      </div>
+      <form class="add-form" id="addForm">
+        <div class="field type">
+          <label>Type</label>
+          <div class="type-toggle">
+            <button type="button" class="active in" data-type="expense" id="btnExpense">Sortie</button>
+            <button type="button" class="out" data-type="income" id="btnIncome">Entrée</button>
+          </div>
+        </div>
+        <div class="field amount">
+          <label for="fAmount">Montant</label>
+          <input type="number" id="fAmount" step="0.01" min="0" placeholder="0.00" inputmode="decimal" required>
+        </div>
+        <div class="field">
+          <label for="fCategory">Catégorie</label>
+          <select id="fCategory"></select>
+        </div>
+        <div class="field" style="flex:2 1 160px;">
+          <label for="fNote">Motif</label>
+          <input type="text" id="fNote" placeholder="ex. épicerie IGA">
+        </div>
+        <div class="field date">
+          <label for="fDate">Date</label>
+          <input type="date" id="fDate">
+        </div>
+        <div class="field submit">
+          <label>&nbsp;</label>
+          <button type="submit" class="add-btn">Ajouter</button>
+        </div>
+      </form>
+      <div id="ledgerList"></div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:20px;">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Rapport du mois</h2>
+          <span class="hint">généré automatiquement</span>
+        </div>
+        <div class="panel-body" id="reportBody"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Répartition des sorties</h2></div>
+        <div class="panel-body" id="categoryBars"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Tendance — solde net</h2></div>
+        <div class="panel-body">
+          <div class="trend" id="trendStrip"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Suggestions</h2></div>
+        <div class="panel-body" id="suggestions"></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot-note">Toutes vos données restent sur cet appareil, dans ce navigateur — rien n'est envoyé à un serveur. Pensez à exporter régulièrement une copie de sauvegarde. · <a href="privacy.html">Confidentialité</a></p>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
