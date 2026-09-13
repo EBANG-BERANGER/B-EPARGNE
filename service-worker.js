@@ -1,5 +1,5 @@
 // Bump this on every deploy that changes app-shell files, so clients pick up the new version.
-const CACHE = "beranger-epargne-v1";
+const CACHE = "beranger-epargne-v2";
 
 const ASSETS = [
   "./",

@@ -6,6 +6,16 @@
   var EXPENSE_CATS = ["Logement","Alimentation","Transport","Santé","Abonnements","Loisirs","Achats","Éducation","Épargne / Investissement","Autres"];
   var INCOME_CATS = ["Salaire","Freelance","Rendement / Placement","Cadeau","Autre revenu"];
   var SAVINGS_CAT = "Épargne / Investissement";
+  var CAT_COLOR_VARS = {
+    "Logement": "--cat-logement",
+    "Alimentation": "--cat-alimentation",
+    "Transport": "--cat-transport",
+    "Santé": "--cat-sante",
+    "Abonnements": "--cat-abonnements",
+    "Loisirs": "--cat-loisirs",
+    "Achats": "--cat-achats",
+    "Éducation": "--cat-education"
+  };
 
   var fmtMoney = new Intl.NumberFormat('fr-CA', { style:'currency', currency:'CAD', maximumFractionDigits:2 });
 
@@ -66,8 +76,29 @@
   var state = {
     allTx: loadTx(),
     currentMonth: monthKey(todayISO()),
-    formType: "expense"
+    formType: "expense",
+    editingId: null
   };
+
+  // ---- theme (light/dark/auto), CSS already defines the variables ----
+  var THEME_KEY = "beranger-epargne:theme";
+  var THEME_LABELS = { system: "Thème : auto", light: "Thème : clair", dark: "Thème : sombre" };
+  function currentTheme(){
+    var t = localStorage.getItem(THEME_KEY);
+    return (t === "light" || t === "dark") ? t : "system";
+  }
+  function applyTheme(t){
+    if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    else document.documentElement.removeAttribute("data-theme");
+    document.getElementById("themeToggle").textContent = THEME_LABELS[t];
+  }
+  applyTheme(currentTheme());
+  document.getElementById("themeToggle").addEventListener("click", function(){
+    var order = ["system","light","dark"];
+    var next = order[(order.indexOf(currentTheme())+1) % order.length];
+    localStorage.setItem(THEME_KEY, next);
+    applyTheme(next);
+  });
 
   function populateCategorySelect(){
     var sel = document.getElementById("fCategory");
@@ -82,8 +113,11 @@
   document.getElementById("btnIncome").addEventListener("click", function(){ setFormType("income"); });
   function setFormType(t){
     state.formType = t;
-    document.getElementById("btnExpense").classList.toggle("active", t==="expense");
-    document.getElementById("btnIncome").classList.toggle("active", t==="income");
+    var bExp = document.getElementById("btnExpense"), bInc = document.getElementById("btnIncome");
+    bExp.classList.toggle("active", t==="expense");
+    bExp.setAttribute("aria-pressed", t==="expense" ? "true" : "false");
+    bInc.classList.toggle("active", t==="income");
+    bInc.setAttribute("aria-pressed", t==="income" ? "true" : "false");
     populateCategorySelect();
   }
 
@@ -107,24 +141,74 @@
     var date = document.getElementById("fDate").value || todayISO();
     var category = document.getElementById("fCategory").value;
     var note = document.getElementById("fNote").value.trim();
-    var tx = {
-      id: uid(),
-      type: state.formType,
-      amount: Math.round(amount*100)/100,
-      category: category,
-      note: note,
-      date: date,
-      createdAt: new Date().toISOString()
-    };
-    state.allTx.push(tx);
+
+    if (state.editingId){
+      var existing = state.allTx.find(function(t){ return t.id === state.editingId; });
+      if (existing){
+        existing.type = state.formType;
+        existing.amount = Math.round(amount*100)/100;
+        existing.category = category;
+        existing.note = note;
+        existing.date = date;
+      }
+    } else {
+      var tx = {
+        id: uid(),
+        type: state.formType,
+        amount: Math.round(amount*100)/100,
+        category: category,
+        note: note,
+        date: date,
+        createdAt: new Date().toISOString()
+      };
+      state.allTx.push(tx);
+    }
     saveTx(state.allTx);
-    document.getElementById("fAmount").value = "";
-    document.getElementById("fNote").value = "";
+    stopEditing();
     render();
   });
 
+  document.getElementById("cancelEditBtn").addEventListener("click", function(){
+    stopEditing();
+  });
+
+  function startEdit(id){
+    var t = state.allTx.find(function(x){ return x.id === id; });
+    if (!t) return;
+    state.editingId = id;
+    setFormType(t.type);
+    document.getElementById("fAmount").value = t.amount;
+    document.getElementById("fCategory").value = t.category;
+    document.getElementById("fNote").value = t.note || "";
+    document.getElementById("fDate").value = t.date;
+    document.getElementById("submitBtn").textContent = "Enregistrer";
+    document.getElementById("cancelEditBtn").hidden = false;
+    document.getElementById("addForm").scrollIntoView({ behavior:"smooth", block:"nearest" });
+    document.getElementById("fAmount").focus();
+    renderLedgerHighlight();
+  }
+
+  function stopEditing(){
+    state.editingId = null;
+    document.getElementById("addForm").reset();
+    document.getElementById("fDate").value = todayISO();
+    setFormType("expense");
+    document.getElementById("submitBtn").textContent = "Ajouter";
+    document.getElementById("cancelEditBtn").hidden = true;
+  }
+
+  function renderLedgerHighlight(){
+    document.querySelectorAll("#ledgerList .row").forEach(function(row){
+      row.classList.toggle("editing", row.getAttribute("data-id") === state.editingId);
+    });
+  }
+
   function deleteTx(id){
-    state.allTx = state.allTx.filter(function(t){ return t.id !== id; });
+    var t = state.allTx.find(function(x){ return x.id === id; });
+    var label = t ? ((t.note || t.category) + " — " + money(t.amount)) : "cette opération";
+    if (!confirm("Supprimer " + label + " ? Cette action est irréversible.")) return;
+    state.allTx = state.allTx.filter(function(x){ return x.id !== id; });
+    if (state.editingId === id) stopEditing();
     saveTx(state.allTx);
     render();
   }
@@ -242,9 +326,10 @@
       var rows = g.items.map(function(t){
         var cls = t.type === "income" ? "in" : (t.category === SAVINGS_CAT ? "save" : "out");
         var sign = t.type === "income" ? "+" : "−";
-        return '<div class="row">'
+        var label = t.note ? escapeHtml(t.note) : escapeHtml(t.category);
+        return '<div class="row" data-id="'+t.id+'">'
           + '<div class="desc">'
-          +   '<span class="note">'+ (t.note ? escapeHtml(t.note) : escapeHtml(t.category)) +'</span>'
+          +   '<span class="note" title="'+label+'">'+ label +'</span>'
           +   '<span class="pill" style="color:'+catColor(t)+'"><span class="dot"></span>'+escapeHtml(t.category)+'</span>'
           + '</div>'
           + '<span class="amt num '+cls+'">'+sign+' '+money(t.amount)+'</span>'
@@ -254,14 +339,25 @@
       return '<div class="day-group"><div class="day-head">'+dayLabel(g.date)+'</div>'+rows+'</div>';
     }).join("");
     el.querySelectorAll(".del").forEach(function(btn){
-      btn.addEventListener("click", function(){ deleteTx(btn.getAttribute("data-id")); });
+      btn.addEventListener("click", function(e){
+        e.stopPropagation();
+        deleteTx(btn.getAttribute("data-id"));
+      });
     });
+    el.querySelectorAll(".row").forEach(function(row){
+      row.addEventListener("click", function(e){
+        if (e.target.closest(".del")) return;
+        startEdit(row.getAttribute("data-id"));
+      });
+    });
+    renderLedgerHighlight();
   }
 
   function catColor(t){
     if (t.type === "income") return "var(--ledger)";
     if (t.category === SAVINGS_CAT) return "var(--brass)";
-    return "var(--muted)";
+    var v = CAT_COLOR_VARS[t.category];
+    return v ? "var("+v+")" : "var(--muted)";
   }
 
   function topCategory(byCat){
@@ -317,9 +413,11 @@
     var max = byCat[cats[0]];
     el.innerHTML = cats.map(function(c){
       var w = Math.max(4, Math.round((byCat[c]/max)*100));
+      var v = CAT_COLOR_VARS[c];
+      var color = v ? "var("+v+")" : "var(--muted)";
       return '<div class="bar-row">'
         + '<div class="bar-top"><span class="cat">'+escapeHtml(c)+'</span><span class="amt num">'+money(byCat[c])+'</span></div>'
-        + '<div class="bar-track"><div class="bar-fill" style="width:'+w+'%"></div></div>'
+        + '<div class="bar-track"><div class="bar-fill" style="width:'+w+'%; background:'+color+'"></div></div>'
         + '</div>';
     }).join("");
   }
@@ -337,8 +435,22 @@
       var h = Math.max(3, Math.round((Math.abs(s.net)/max)*44));
       var cls = s.net > 0 ? "pos" : (s.net < 0 ? "neg" : "");
       var isCur = s.key === state.currentMonth;
-      return '<div class="bar'+(isCur?' current':'')+'"><div class="stick '+cls+'" style="height:'+h+'px" title="'+money(s.net)+'"></div><div class="m">'+monthShort(s.key)+'</div></div>';
+      var label = monthLabel(s.key) + " : " + money(s.net);
+      return '<div class="bar'+(isCur?' current':'')+'" tabindex="0" role="button" aria-label="'+label+'">'
+        + '<span class="val">'+money(s.net)+'</span>'
+        + '<div class="stick '+cls+'" style="height:'+h+'px"></div>'
+        + '<div class="m">'+monthShort(s.key)+'</div></div>';
     }).join("");
+    el.querySelectorAll(".bar").forEach(function(b){
+      b.addEventListener("click", function(){
+        var was = b.classList.contains("show");
+        el.querySelectorAll(".bar").forEach(function(x){ x.classList.remove("show"); });
+        b.classList.toggle("show", !was);
+      });
+      b.addEventListener("keydown", function(e){
+        if (e.key === "Enter" || e.key === " "){ e.preventDefault(); b.click(); }
+      });
+    });
   }
 
   function renderSuggestions(cur, prev, monthTx, prevTx){

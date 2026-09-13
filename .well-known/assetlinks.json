@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.ebangberanger.epargne",
+        "sha256_cert_fingerprints": ["4A:B3:AC:93:37:65:9D:1E:D2:25:85:BB:F0:AA:25:32:4B:42:7D:FA:05:15:2C:7D:4E:EB:6F:F9:12:BD:D9:6F"]
+      }
+    }]

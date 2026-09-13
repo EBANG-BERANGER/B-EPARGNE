@@ -30,6 +30,7 @@
     </div>
     <div class="header-actions">
       <div class="data-actions">
+        <button class="ghost-btn" id="themeToggle" aria-label="Changer le thème">Thème : auto</button>
         <button class="ghost-btn" id="exportBtn">Exporter</button>
         <button class="ghost-btn" id="importBtn">Importer</button>
         <input type="file" id="importFile" accept="application/json" hidden>
@@ -84,8 +85,8 @@
         <div class="field type">
           <label>Type</label>
           <div class="type-toggle">
-            <button type="button" class="active in" data-type="expense" id="btnExpense">Sortie</button>
-            <button type="button" class="out" data-type="income" id="btnIncome">Entrée</button>
+            <button type="button" class="active in" data-type="expense" id="btnExpense" aria-pressed="true">Sortie</button>
+            <button type="button" class="out" data-type="income" id="btnIncome" aria-pressed="false">Entrée</button>
           </div>
         </div>
         <div class="field amount">
@@ -106,7 +107,10 @@
         </div>
         <div class="field submit">
           <label>&nbsp;</label>
-          <button type="submit" class="add-btn">Ajouter</button>
+          <div style="display:flex; gap:6px;">
+            <button type="submit" class="add-btn" id="submitBtn">Ajouter</button>
+            <button type="button" class="ghost-btn" id="cancelEditBtn" hidden>Annuler</button>
+          </div>
         </div>
       </form>
       <div id="ledgerList"></div>

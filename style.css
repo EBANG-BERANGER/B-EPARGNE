@@ -10,6 +10,14 @@
   --line:#c9d2c1;
   --line-soft:#dbe1d4;
   --focus:#2f6f4e;
+  --cat-logement:#1b9e77;
+  --cat-alimentation:#d95f02;
+  --cat-transport:#7570b3;
+  --cat-sante:#e7298a;
+  --cat-abonnements:#66a61e;
+  --cat-loisirs:#e6ab02;
+  --cat-achats:#a6761d;
+  --cat-education:#377eb8;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -236,8 +244,10 @@ input, select{ font-family:inherit; }
   align-items:center;
   padding:9px 18px;
   border-top:1px solid var(--line-soft);
+  cursor:pointer;
 }
 .row:hover{ background:var(--paper); }
+.row.editing{ background:var(--paper); box-shadow:inset 3px 0 0 var(--ledger); }
 .row .desc{ min-width:0; display:flex; flex-direction:column; gap:2px; }
 .row .note{ font-size:.86rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .pill{
@@ -286,13 +296,20 @@ input, select{ font-family:inherit; }
 .bar-track{ height:7px; background:var(--line-soft); border-radius:2px; overflow:hidden; }
 .bar-fill{ height:100%; background:var(--ledger); border-radius:2px; }
 
-.trend{ display:flex; align-items:flex-end; gap:6px; height:52px; margin-top:4px; }
-.trend .bar{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; }
+.trend{ display:flex; align-items:flex-end; gap:6px; height:52px; margin-top:20px; }
+.trend .bar{ position:relative; flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; }
 .trend .stick{ width:100%; max-width:22px; border-radius:2px 2px 0 0; background:var(--line); }
 .trend .stick.pos{ background:var(--ledger); }
 .trend .stick.neg{ background:var(--wine); }
 .trend .m{ font-size:.6rem; color:var(--muted); }
 .trend .bar.current .m{ color:var(--ink); font-weight:600; }
+.trend .val{
+  position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
+  margin-bottom:6px; font-size:.66rem; font-family:"IBM Plex Mono",monospace;
+  background:var(--ink); color:var(--paper); padding:2px 6px; border-radius:3px;
+  white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .12s;
+}
+.trend .bar:hover .val, .trend .bar:focus-visible .val, .trend .bar.show .val{ opacity:1; }
 
 .tip{ display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--line-soft); }
 .tip:last-child{ border-bottom:none; }
