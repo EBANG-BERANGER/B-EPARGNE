@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Confidentialité — Béranger Épargne</title>
-<meta name="theme-color" content="#14243f">
+<meta name="theme-color" content="#1F6B4A">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="style.css">
 <style>
   .doc{ max-width:680px; margin:0 auto; padding:40px 20px 80px; }
@@ -25,27 +25,30 @@
   <h1>Confidentialité</h1>
   <p class="updated">Dernière mise à jour : 13 septembre 2026.</p>
 
-  <p><strong>Béranger Épargne</strong> est une application de suivi de finances personnelles. Elle est conçue pour ne rien envoyer en dehors de votre appareil.</p>
+  <p><strong>Béranger Épargne</strong> est une application de suivi de finances personnelles. Par défaut, sans connexion, elle ne transmet rien en dehors de votre appareil. Vous pouvez choisir de vous connecter avec un compte Google pour synchroniser vos données entre vos appareils — dans ce cas, et uniquement dans ce cas, vos données sont stockées de façon sécurisée sur les serveurs de Google (Firebase), comme expliqué ci-dessous.</p>
 
-  <h2>Quelles données sont enregistrées</h2>
-  <p>Les entrées et sorties d'argent que vous saisissez (montant, catégorie, motif, date) sont stockées uniquement dans le stockage local de votre navigateur ou de l'application installée sur votre appareil.</p>
+  <h2>Mode sans connexion (par défaut)</h2>
+  <p>Les entrées et sorties d'argent que vous saisissez (montant, catégorie, motif, date) sont stockées uniquement dans le stockage local de votre navigateur ou de l'application installée sur votre appareil. Rien n'est transmis, vendu ou partagé avec qui que ce soit. Aucun outil d'analyse, de publicité ou de suivi n'est intégré. Si vous désinstallez l'application ou effacez les données du navigateur pour ce site, l'historique est supprimé de façon définitive — utilisez la fonction <em>Exporter</em> pour en garder une copie de sauvegarde.</p>
 
-  <h2>Où vont ces données</h2>
+  <h2>Mode connecté (Google, facultatif)</h2>
+  <p>Si vous choisissez de cliquer sur « Se connecter avec Google » :</p>
   <ul>
-    <li>Nulle part. L'application ne possède pas de serveur : aucune donnée n'est transmise, vendue ou partagée avec qui que ce soit.</li>
-    <li>Aucun outil d'analyse, de publicité ou de suivi n'est intégré.</li>
-    <li>Si vous désinstallez l'application ou effacez les données du navigateur pour ce site, l'historique est supprimé de façon définitive — utilisez la fonction <em>Exporter</em> pour en garder une copie de sauvegarde.</li>
+    <li>Google vous authentifie et nous transmet votre nom, votre adresse courriel et votre photo de profil, uniquement pour identifier votre compte dans l'application.</li>
+    <li>Vos opérations financières (montant, catégorie, motif, date) sont alors enregistrées sur <strong>Firebase</strong>, un service d'hébergement de Google, dans une base de données qui vous est propre — les règles de sécurité empêchent tout autre utilisateur d'y accéder.</li>
+    <li>Ces données servent uniquement à synchroniser votre registre entre vos appareils. Elles ne sont ni vendues, ni partagées avec des tiers, ni utilisées à des fins publicitaires.</li>
+    <li>Vous pouvez vous déconnecter à tout moment ; vos données restent alors sur Firebase (pour la prochaine connexion) mais l'appareil déconnecté n'y a plus accès tant que vous ne vous reconnectez pas.</li>
+    <li>La connexion elle-même est gérée par Google et soumise à la <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">politique de confidentialité de Google</a>.</li>
   </ul>
 
   <h2>Contrôle de vos données</h2>
   <ul>
     <li><strong>Exporter</strong> : télécharge une copie complète de votre registre au format JSON, que vous seul possédez.</li>
     <li><strong>Importer</strong> : recharge une copie précédemment exportée, par exemple sur un nouvel appareil.</li>
-    <li><strong>Supprimer</strong> : effacer les données de l'application depuis les réglages de votre navigateur ou de votre appareil supprime définitivement le registre.</li>
+    <li><strong>Supprimer</strong> : effacer les données de l'application depuis les réglages de votre navigateur supprime la copie locale ; si vous étiez connecté, contactez-nous pour supprimer aussi la copie sur Firebase.</li>
   </ul>
 
   <h2>Contact</h2>
-  <p>Pour toute question au sujet de cette politique : <a href="mailto:ebangachille2.0@gmail.com">ebangachille2.0@gmail.com</a>.</p>
+  <p>Pour toute question au sujet de cette politique, ou pour demander la suppression de vos données stockées sur Firebase : <a href="mailto:ebangachille2.0@gmail.com">ebangachille2.0@gmail.com</a>.</p>
 </div>
 </body>
 </html>

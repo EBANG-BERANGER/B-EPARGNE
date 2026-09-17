@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Béranger Épargne</title>
 <meta name="description" content="Registre financier personnel : suivi des entrées et sorties, rapport mensuel automatique et suggestions d'épargne.">
-<meta name="theme-color" content="#14243f">
+<meta name="theme-color" content="#1F6B4A">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -25,6 +25,15 @@
       </div>
     </div>
     <div class="header-actions">
+      <div class="auth-actions">
+        <button class="ghost-btn" id="signInBtn">Se connecter avec Google</button>
+        <div class="user-chip" id="userChip" hidden>
+          <img id="userAvatar" alt="" width="24" height="24">
+          <span id="userName"></span>
+          <button class="ghost-btn" id="signOutBtn">Déconnexion</button>
+        </div>
+        <span class="sync-status" id="syncStatus"></span>
+      </div>
       <div class="data-actions">
         <button class="ghost-btn" id="themeToggle" aria-label="Changer le thème">Thème : auto</button>
         <button class="ghost-btn" id="exportBtn">Exporter</button>
@@ -49,25 +58,25 @@
   </div>
 
   <section class="tiles">
-    <div class="tile in">
-      <span class="k">Entrées</span>
-      <span class="v num" id="tileIn">—</span>
-      <span class="d" id="tileInSub">&nbsp;</span>
+    <div class="tile" data-tone="income">
+      <span class="tile-label">Entrées</span>
+      <span class="tile-value num" id="tileIn">—</span>
+      <span class="tile-delta is-flat" id="tileInSub">— vs mois précédent</span>
     </div>
-    <div class="tile out">
-      <span class="k">Sorties courantes</span>
-      <span class="v num" id="tileOut">—</span>
-      <span class="d" id="tileOutSub">&nbsp;</span>
+    <div class="tile" data-tone="expense">
+      <span class="tile-label">Sorties courantes</span>
+      <span class="tile-value num" id="tileOut">—</span>
+      <span class="tile-delta is-flat" id="tileOutSub">— vs mois précédent</span>
     </div>
-    <div class="tile save">
-      <span class="k">Épargne du mois</span>
-      <span class="v num" id="tileSave">—</span>
-      <span class="d" id="tileSaveSub">&nbsp;</span>
+    <div class="tile" data-tone="savings">
+      <span class="tile-label">Épargne du mois</span>
+      <span class="tile-value num" id="tileSave">—</span>
+      <span class="tile-delta is-flat" id="tileSaveSub">— vs mois précédent</span>
     </div>
-    <div class="tile left">
-      <span class="k">Reste non alloué</span>
-      <span class="v num" id="tileLeft">—</span>
-      <span class="d" id="tileLeftSub">&nbsp;</span>
+    <div class="tile" data-tone="neutral" id="tileLeftCard">
+      <span class="tile-label">Reste non alloué</span>
+      <span class="tile-value num" id="tileLeft">—</span>
+      <span class="tile-delta is-flat" id="tileLeftSub">— équilibré</span>
     </div>
   </section>
 
@@ -140,9 +149,9 @@
     </div>
   </section>
 
-  <p class="foot-note">Toutes vos données restent sur cet appareil, dans ce navigateur — rien n'est envoyé à un serveur. Pensez à exporter régulièrement une copie de sauvegarde. · <a href="privacy.html">Confidentialité</a></p>
+  <p class="foot-note">Sans connexion, toutes vos données restent uniquement sur cet appareil. Connectez-vous avec Google pour les synchroniser entre vos appareils. Pensez à exporter régulièrement une copie de sauvegarde. · <a href="privacy.html">Confidentialité</a></p>
 </div>
 
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>

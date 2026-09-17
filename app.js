@@ -1,5 +1,25 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
 (function(){
-  "use strict";
+
+  var firebaseConfig = {
+    apiKey: "AIzaSyB5lALYHfkk3dvzlmx6ufKuRbeq-f38DUQ",
+    authDomain: "b-epargne.firebaseapp.com",
+    projectId: "b-epargne",
+    storageBucket: "b-epargne.firebasestorage.app",
+    messagingSenderId: "185236872768",
+    appId: "1:185236872768:web:de6a85cef2edeaca0709a5"
+  };
+  var firebaseApp = initializeApp(firebaseConfig);
+  var auth = getAuth(firebaseApp);
+  var db = getFirestore(firebaseApp);
+  var unsubscribeTx = null;
 
   var STORAGE_KEY = "beranger-epargne:transactions";
 
@@ -21,6 +41,23 @@
 
   function money(n){ return fmtMoney.format(n||0); }
   function pct(n){ return (n>=0?"+":"") + Math.round(n*100) + "%"; }
+  function trendChip(cur, prev, goodWhenUp){
+    if (!prev){
+      return '<span class="tile-delta is-flat">— <span class="tile-delta-ctx">vs mois précédent</span></span>';
+    }
+    var change = (cur - prev) / prev;
+    var flat = Math.abs(change) < 0.005;
+    var up = change > 0;
+    var good = goodWhenUp ? change >= 0 : change <= 0;
+    var arrow = flat ? "→" : (up ? "↑" : "↓");
+    var cls = flat ? "is-flat" : (good ? "is-pos" : "is-neg");
+    return '<span class="tile-delta '+cls+'">'+arrow+' '+Math.round(Math.abs(change)*100)+'% <span class="tile-delta-ctx">vs mois précédent</span></span>';
+  }
+  function leftoverChip(leftover){
+    if (leftover > 0) return '<span class="tile-delta is-pos">↑ à assigner à l’épargne</span>';
+    if (leftover < 0) return '<span class="tile-delta is-neg">↓ dépassement ce mois-ci</span>';
+    return '<span class="tile-delta is-flat">— équilibré</span>';
+  }
   function monthKey(d){ return d.slice(0,7); }
   function todayISO(){ var d=new Date(); return d.toISOString().slice(0,10); }
   function uid(){ return (crypto && crypto.randomUUID) ? crypto.randomUUID() : ("tx-" + Date.now() + "-" + Math.random().toString(36).slice(2)); }
@@ -77,8 +114,90 @@
     allTx: loadTx(),
     currentMonth: monthKey(todayISO()),
     formType: "expense",
-    editingId: null
+    editingId: null,
+    user: null
   };
+
+  // ---- compte Google + synchronisation Firestore ----
+  function setSyncStatus(text, cls){
+    var el = document.getElementById("syncStatus");
+    el.textContent = text;
+    el.className = "sync-status " + (cls || "");
+  }
+
+  function attachCloudSync(uid){
+    setSyncStatus("Synchronisation…", "syncing");
+    var colRef = collection(db, "users", uid, "transactions");
+
+    // migration ponctuelle : envoie les opérations locales pas encore dans le cloud
+    var localTx = loadTx();
+    if (localTx.length){
+      var batch = writeBatch(db);
+      localTx.forEach(function(t){ batch.set(doc(colRef, t.id), t, { merge: true }); });
+      batch.commit().catch(function(e){ console.error("Migration vers Firestore impossible", e); });
+    }
+
+    unsubscribeTx = onSnapshot(colRef, function(snap){
+      var list = [];
+      snap.forEach(function(d){ list.push(d.data()); });
+      state.allTx = list;
+      saveTx(list); // copie locale, pour lecture hors-ligne même connecté
+      render();
+      setSyncStatus("Synchronisé", "synced");
+    }, function(err){
+      console.error("Écoute Firestore impossible", err);
+      state.allTx = loadTx();
+      render();
+      setSyncStatus("Hors ligne — dernière copie locale affichée", "offline");
+    });
+  }
+
+  function detachCloudSync(){
+    if (unsubscribeTx){ unsubscribeTx(); unsubscribeTx = null; }
+    setSyncStatus("", "");
+  }
+
+  onAuthStateChanged(auth, function(user){
+    state.user = user;
+    var signInBtn = document.getElementById("signInBtn");
+    var userChip = document.getElementById("userChip");
+    if (user){
+      signInBtn.hidden = true;
+      userChip.hidden = false;
+      document.getElementById("userAvatar").src = user.photoURL || "icons/logo.png";
+      document.getElementById("userName").textContent = user.displayName || user.email || "Connecté·e";
+      attachCloudSync(user.uid);
+    } else {
+      signInBtn.hidden = false;
+      userChip.hidden = true;
+      detachCloudSync();
+      state.allTx = loadTx();
+      render();
+    }
+  });
+
+  document.getElementById("signInBtn").addEventListener("click", function(){
+    signInWithPopup(auth, new GoogleAuthProvider()).catch(function(e){
+      console.error("Connexion Google impossible", e);
+      alert("La connexion a échoué. Vérifiez votre connexion internet et réessayez.");
+    });
+  });
+  document.getElementById("signOutBtn").addEventListener("click", function(){
+    signOut(auth);
+  });
+
+  function persistTx(tx){
+    if (state.user){
+      setDoc(doc(db, "users", state.user.uid, "transactions", tx.id), tx).catch(function(e){
+        console.error("Écriture Firestore impossible", e);
+        setSyncStatus("Erreur de synchronisation", "offline");
+      });
+    } else {
+      if (!state.allTx.some(function(t){ return t.id === tx.id; })) state.allTx.push(tx);
+      saveTx(state.allTx);
+      render();
+    }
+  }
 
   // ---- theme (light/dark/auto), CSS already defines the variables ----
   var THEME_KEY = "beranger-epargne:theme";
@@ -142,17 +261,17 @@
     var category = document.getElementById("fCategory").value;
     var note = document.getElementById("fNote").value.trim();
 
+    var tx;
     if (state.editingId){
-      var existing = state.allTx.find(function(t){ return t.id === state.editingId; });
-      if (existing){
-        existing.type = state.formType;
-        existing.amount = Math.round(amount*100)/100;
-        existing.category = category;
-        existing.note = note;
-        existing.date = date;
-      }
+      tx = state.allTx.find(function(t){ return t.id === state.editingId; });
+      if (!tx) return;
+      tx.type = state.formType;
+      tx.amount = Math.round(amount*100)/100;
+      tx.category = category;
+      tx.note = note;
+      tx.date = date;
     } else {
-      var tx = {
+      tx = {
         id: uid(),
         type: state.formType,
         amount: Math.round(amount*100)/100,
@@ -161,11 +280,9 @@
         date: date,
         createdAt: new Date().toISOString()
       };
-      state.allTx.push(tx);
     }
-    saveTx(state.allTx);
+    persistTx(tx);
     stopEditing();
-    render();
   });
 
   document.getElementById("cancelEditBtn").addEventListener("click", function(){
@@ -207,10 +324,17 @@
     var t = state.allTx.find(function(x){ return x.id === id; });
     var label = t ? ((t.note || t.category) + " — " + money(t.amount)) : "cette opération";
     if (!confirm("Supprimer " + label + " ? Cette action est irréversible.")) return;
-    state.allTx = state.allTx.filter(function(x){ return x.id !== id; });
     if (state.editingId === id) stopEditing();
-    saveTx(state.allTx);
-    render();
+    if (state.user){
+      deleteDoc(doc(db, "users", state.user.uid, "transactions", id)).catch(function(e){
+        console.error("Suppression Firestore impossible", e);
+        setSyncStatus("Erreur de synchronisation", "offline");
+      });
+    } else {
+      state.allTx = state.allTx.filter(function(x){ return x.id !== id; });
+      saveTx(state.allTx);
+      render();
+    }
   }
 
   // ---- export / import ----
@@ -242,13 +366,18 @@
         var added = 0;
         incoming.forEach(function(t){
           if (t && t.id && !existingIds.has(t.id) && typeof t.amount === "number" && t.date){
-            state.allTx.push(t);
             existingIds.add(t.id);
             added++;
+            if (state.user){
+              setDoc(doc(db, "users", state.user.uid, "transactions", t.id), t).catch(function(e){
+                console.error("Import Firestore impossible", e);
+              });
+            } else {
+              state.allTx.push(t);
+            }
           }
         });
-        saveTx(state.allTx);
-        render();
+        if (!state.user){ saveTx(state.allTx); render(); }
         alert(added + " opération(s) importée(s).");
       } catch(err){
         alert("Ce fichier ne ressemble pas à une sauvegarde valide de Béranger Épargne.");
@@ -288,14 +417,13 @@
     document.getElementById("tileIn").textContent = money(cur.income);
     document.getElementById("tileOut").textContent = money(cur.expense);
     document.getElementById("tileSave").textContent = money(cur.savings);
-    var leftEl = document.getElementById("tileLeft");
-    leftEl.textContent = money(cur.leftover);
-    leftEl.classList.toggle("neg", cur.leftover < 0);
+    document.getElementById("tileLeft").textContent = money(cur.leftover);
+    document.getElementById("tileLeftCard").dataset.tone = cur.leftover < 0 ? "danger" : "neutral";
 
-    document.getElementById("tileInSub").textContent = prev.income ? pct((cur.income-prev.income)/prev.income) + " vs mois précédent" : "";
-    document.getElementById("tileOutSub").textContent = prev.expense ? pct((cur.expense-prev.expense)/prev.expense) + " vs mois précédent" : "";
-    document.getElementById("tileSaveSub").textContent = cur.income ? Math.round((cur.savings/cur.income)*100) + "% des entrées" : "";
-    document.getElementById("tileLeftSub").textContent = cur.leftover > 0 ? "à assigner à l'épargne" : (cur.leftover < 0 ? "dépassement ce mois-ci" : "");
+    document.getElementById("tileInSub").innerHTML = trendChip(cur.income, prev.income, true);
+    document.getElementById("tileOutSub").innerHTML = trendChip(cur.expense, prev.expense, false);
+    document.getElementById("tileSaveSub").innerHTML = trendChip(cur.savings, prev.savings, true);
+    document.getElementById("tileLeftSub").innerHTML = leftoverChip(cur.leftover);
 
     document.getElementById("txCount").textContent = monthTx.length + (monthTx.length>1 ? " opérations" : " opération");
 
