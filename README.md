@@ -2,7 +2,7 @@
 
 Registre financier personnel : suivi des entrées et sorties d'argent, rapport mensuel généré automatiquement, et suggestions d'épargne calculées à partir de vos propres données.
 
-C'est une application web statique (HTML/CSS/JS, aucune dépendance, aucun serveur). Toutes les données restent dans le navigateur de l'utilisateur (`localStorage`) — rien n'est envoyé nulle part. C'est aussi une PWA (Progressive Web App) : installable, avec un service worker pour fonctionner hors ligne.
+C'est une application web statique (HTML/CSS/JS, aucune dépendance, aucun serveur). Toutes les données restent dans le navigateur de l'utilisateur (`localStorage`) rien n'est envoyé nulle part. C'est aussi une PWA (Progressive Web App) : installable, avec un service worker pour fonctionner hors ligne.
 
 ## Développement local
 
